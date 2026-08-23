@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0E3B36" />
+<title>Relevé JIRAMA</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<style>
+  :root{
+    --ink:#16241f;
+    --paper:#F4F1EA;
+    --teal-900:#0E3B36;
+    --teal-700:#155E56;
+    --teal-500:#1C8377;
+    --amber:#E8A33D;
+    --amber-dark:#B87A22;
+    --red:#B84A3E;
+    --line:#D8D2C4;
+    --card:#FFFFFF;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    min-height:100vh;
+    padding-bottom:78px;
+  }
+  header{
+    background:var(--teal-900);
+    color:var(--paper);
+    padding:18px 20px 16px;
+    position:sticky;
+    top:0;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  header .brand{display:flex;align-items:center;gap:10px;}
+  header .dial{
+    width:30px;height:30px;border-radius:50%;
+    border:2.5px solid var(--amber);
+    position:relative;flex:none;
+  }
+  header .dial::after{
+    content:"";position:absolute;top:50%;left:50%;
+    width:9px;height:2.5px;background:var(--amber);
+    transform-origin:0 50%;transform:rotate(45deg);
+  }
+  header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.2px;}
+  header .sub{font-size:11px;opacity:.75;margin-top:1px;}
+  .status-pill{
+    font-size:11px;padding:4px 10px;border-radius:999px;
+    background:rgba(244,241,234,.12);
+    display:flex;align-items:center;gap:6px;
+  }
+  .status-dot{width:7px;height:7px;border-radius:50%;background:#5FBF9C;}
+  .status-pill.offline .status-dot{background:var(--amber);}
+  main{padding:16px;max-width:520px;margin:0 auto;}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:14px;
+  }
+  label{
+    display:block;font-size:12.5px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.5px;
+    color:var(--teal-700);margin-bottom:6px;
+  }
+  .field{margin-bottom:16px;}
+  input[type=text], input[type=number], textarea, select{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;
+    padding:12px 13px;font-size:16px;font-family:inherit;
+    background:#FBFAF7;color:var(--ink);
+  }
+  input:focus, textarea:focus, select:focus{
+    outline:none;border-color:var(--teal-500);
+    background:#fff;
+  }
+  textarea{resize:vertical;min-height:64px;}
+
+  /* meter/odometer styling for index fields */
+  .index-row{display:flex;gap:10px;}
+  .index-row .field{flex:1;margin-bottom:0;}
+  .odometer-input{
+    font-family:"Courier New",monospace;
+    font-variant-numeric:tabular-nums;
+    font-size:22px;font-weight:700;letter-spacing:2px;
+    background:var(--teal-900);color:var(--amber);
+    border:2px solid var(--teal-900);
+    text-align:center;
+  }
+  .odometer-input::placeholder{color:rgba(232,163,61,.4);}
+  .conso-box{
+    margin-top:12px;background:#EFF6F3;border:1.5px dashed var(--teal-500);
+    border-radius:10px;padding:12px 14px;display:flex;
+    align-items:center;justify-content:space-between;
+  }
+  .conso-box .label{font-size:12px;color:var(--teal-700);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+  .conso-box .value{font-family:"Courier New",monospace;font-weight:800;font-size:20px;color:var(--teal-900);}
+
+  button{font-family:inherit;cursor:pointer;border:none;}
+  .btn-primary{
+    width:100%;background:var(--teal-900);color:var(--paper);
+    padding:15px;border-radius:12px;font-size:16px;font-weight:700;
+    letter-spacing:.3px;
+  }
+  .btn-primary:active{background:var(--teal-700);}
+  .btn-secondary{
+    width:100%;background:transparent;color:var(--teal-700);
+    border:1.5px solid var(--teal-500);padding:12px;border-radius:12px;
+    font-size:14.5px;font-weight:700;
+  }
+  .row-btns{display:flex;gap:10px;}
+  .row-btns > *{flex:1;}
+
+  .photo-zone{
+    border:2px dashed var(--line);border-radius:12px;
+    padding:14px;text-align:center;color:#7a7566;font-size:13px;
+    position:relative;overflow:hidden;
+  }
+  .photo-zone img{width:100%;border-radius:8px;display:block;}
+  .photo-zone input[type=file]{
+    position:absolute;inset:0;opacity:0;cursor:pointer;
+  }
+  .photo-remove{
+    margin-top:8px;background:none;color:var(--red);font-size:12.5px;
+    font-weight:700;text-decoration:underline;
+  }
+
+  /* nav */
+  nav{
+    position:fixed;bottom:0;left:0;right:0;
+    background:var(--card);border-top:1px solid var(--line);
+    display:flex;z-index:20;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav button{
+    flex:1;background:none;padding:12px 4px 10px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:#8a8578;font-size:11.5px;font-weight:700;
+  }
+  nav button.active{color:var(--teal-900);}
+  nav .ic{width:20px;height:20px;border-radius:5px;border:2px solid currentColor;}
+  nav .ic.list{border-radius:3px;position:relative;}
+  nav .ic.list::before,nav .ic.list::after{content:"";position:absolute;left:3px;right:3px;height:2px;background:currentColor;}
+  nav .ic.list::before{top:5px;} nav .ic.list::after{top:10px;}
+
+  .view{display:none;} .view.active{display:block;}
+
+  /* history */
+  .rec{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;margin-bottom:10px;
+  }
+  .rec-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+  .rec-id{font-weight:800;font-size:15px;color:var(--teal-900);}
+  .rec-date{font-size:11.5px;color:#928c7d;white-space:nowrap;}
+  .rec-client{font-size:13px;color:#5a564a;margin-top:2px;}
+  .rec-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+  .rec-conso{font-family:"Courier New",monospace;font-weight:800;color:var(--teal-700);font-size:14px;}
+  .rec-actions button{background:none;font-size:12px;font-weight:700;color:var(--red);padding:4px 6px;}
+  .empty{text-align:center;color:#928c7d;padding:40px 20px;font-size:14px;}
+  .empty .dial-big{
+    width:56px;height:56px;border-radius:50%;border:3px solid var(--line);
+    margin:0 auto 14px;
+  }
+  .search-bar{margin-bottom:12px;}
+  .toolbar{display:flex;gap:10px;margin-bottom:14px;}
+  .toolbar button{flex:1;}
+
+  .toast{
+    position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(10px);
+    background:var(--teal-900);color:var(--paper);padding:12px 20px;
+    border-radius:10px;font-size:13.5px;font-weight:600;opacity:0;
+    transition:all .25s ease;z-index:30;pointer-events:none;white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .gps-btn{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;}
+  .hint{font-size:11.5px;color:#928c7d;margin-top:5px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="dial"></div>
+    <div>
+      <h1>Relevé JIRAMA</h1>
+      <div class="sub">Saisie terrain</div>
+    </div>
+  </div>
+  <div class="status-pill" id="statusPill">
+    <span class="status-dot"></span><span id="statusText">Prêt</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- FORM VIEW -->
+  <section class="view active" id="view-form">
+    <form id="releveForm">
+      <div class="card">
+        <div class="field">
+          <label for="numCompteur">N° compteur / réf. client</label>
+          <input type="text" id="numCompteur" inputmode="text" required placeholder="Ex : 0231458" />
+        </div>
+        <div class="field">
+          <label for="nomClient">Nom du client</label>
+          <input type="text" id="nomClient" placeholder="Nom et prénom" />
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="quartier">Quartier / adresse</label>
+          <input type="text" id="quartier" placeholder="Ex : Ankoronga, Toliara" />
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="index-row">
+          <div class="field">
+            <label for="ancienIndex">Ancien index</label>
+            <input class="odometer-input" type="number" id="ancienIndex" placeholder="00000" inputmode="numeric" required />
+          </div>
+          <div class="field">
+            <label for="nouvelIndex">Nouvel index</label>
+            <input class="odometer-input" type="number" id="nouvelIndex" placeholder="00000" inputmode="numeric" required />
+          </div>
+        </div>
+        <div class="conso-box">
+          <span class="label">Consommation</span>
+          <span class="value" id="consoValue">—</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="field">
+          <label>Photo du compteur</label>
+          <div class="photo-zone" id="photoZone">
+            <span id="photoPlaceholder">Toucher pour prendre une photo</span>
+            <img id="photoPreview" style="display:none;" />
+            <input type="file" id="photoInput" accept="image/*" capture="environment" />
+          </div>
+          <button type="button" class="photo-remove" id="photoRemove" style="display:none;">Retirer la photo</button>
+        </div>
+
+        <div class="field" style="margin-bottom:0;">
+          <label>Localisation GPS (optionnel)</label>
+          <button type="button" class="btn-secondary gps-btn" id="gpsBtn">Capturer la position</button>
+          <div class="hint" id="gpsResult"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="field" style="margin-bottom:0;">
+          <label for="remarques">Remarques</label>
+          <textarea id="remarques" placeholder="Ex : compteur bloqué, accès impossible, fuite visible..."></textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary">Enregistrer le relevé</button>
+    </form>
+  </section>
+
+  <!-- HISTORY VIEW -->
+  <section class="view" id="view-history">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Rechercher un n° compteur ou client..." />
+    </div>
+    <div class="toolbar">
+      <button class="btn-secondary" id="exportBtn">Exporter en CSV</button>
+      <button class="btn-secondary" id="exportJsonBtn">Sauvegarde JSON</button>
+    </div>
+    <div id="recordsList"></div>
+  </section>
+
+</main>
+
+<nav>
+  <button class="nav-btn active" data-view="view-form">
+    <span class="ic"></span>Nouveau relevé
+  </button>
+  <button class="nav-btn" data-view="view-history">
+    <span class="ic list"></span>Historique
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- IndexedDB storage ---------- */
+const DB_NAME = "releve-jirama-db";
+const STORE = "releves";
+let db;
+
+function openDB(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = (e)=>{
+      const _db = e.target.result;
+      if(!_db.objectStoreNames.contains(STORE)){
+        const store = _db.createObjectStore(STORE, { keyPath:"id" });
+        store.createIndex("date", "date");
+      }
+    };
+    req.onsuccess = (e)=>{ db = e.target.result; resolve(db); };
+    req.onerror = (e)=> reject(e);
+  });
+}
+function addRecord(rec){
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).add(rec);
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = (e)=>reject(e);
+  });
+}
+function deleteRecord(id){
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).delete(id);
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = (e)=>reject(e);
+  });
+}
+function getAllRecords(){
+  return new Promise((resolve, reject)=>{
+    const tx = db.transaction(STORE, "readonly");
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = ()=>resolve(req.result.sort((a,b)=> b.date.localeCompare(a.date)));
+    req.onerror = (e)=>reject(e);
+  });
+}
+
+/* ---------- UI helpers ---------- */
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2200);
+}
+function updateStatus(){
+  const pill = document.getElementById("statusPill");
+  const text = document.getElementById("statusText");
+  if(navigator.onLine){
+    pill.classList.remove("offline");
+    text.textContent = "En ligne";
+  } else {
+    pill.classList.add("offline");
+    text.textContent = "Hors ligne";
+  }
+}
+window.addEventListener("online", updateStatus);
+window.addEventListener("offline", updateStatus);
+
+/* ---------- nav ---------- */
+document.querySelectorAll(".nav-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.view).classList.add("active");
+    if(btn.dataset.view === "view-history") renderHistory();
+  });
+});
+
+/* ---------- consumption live calc ---------- */
+const ancienEl = document.getElementById("ancienIndex");
+const nouvelEl = document.getElementById("nouvelIndex");
+const consoValue = document.getElementById("consoValue");
+function updateConso(){
+  const a = parseFloat(ancienEl.value);
+  const n = parseFloat(nouvelEl.value);
+  if(!isNaN(a) && !isNaN(n)){
+    const diff = n - a;
+    consoValue.textContent = diff >= 0 ? diff + " unités" : "⚠ index invalide";
+    consoValue.style.color = diff >= 0 ? "" : "#B84A3E";
+  } else {
+    consoValue.textContent = "—";
+    consoValue.style.color = "";
+  }
+}
+ancienEl.addEventListener("input", updateConso);
+nouvelEl.addEventListener("input", updateConso);
+
+/* ---------- photo capture ---------- */
+let photoDataUrl = null;
+const photoInput = document.getElementById("photoInput");
+const photoPreview = document.getElementById("photoPreview");
+const photoPlaceholder = document.getElementById("photoPlaceholder");
+const photoRemove = document.getElementById("photoRemove");
+
+photoInput.addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    photoDataUrl = ev.target.result;
+    photoPreview.src = photoDataUrl;
+    photoPreview.style.display = "block";
+    photoPlaceholder.style.display = "none";
+    photoRemove.style.display = "inline-block";
+  };
+  reader.readAsDataURL(file);
+});
+photoRemove.addEventListener("click", ()=>{
+  photoDataUrl = null;
+  photoInput.value = "";
+  photoPreview.style.display = "none";
+  photoPlaceholder.style.display = "block";
+  photoRemove.style.display = "none";
+});
+
+/* ---------- GPS ---------- */
+let gpsCoords = null;
+document.getElementById("gpsBtn").addEventListener("click", ()=>{
+  const resultEl = document.getElementById("gpsResult");
+  if(!navigator.geolocation){
+    resultEl.textContent = "GPS non disponible sur cet appareil.";
+    return;
+  }
+  resultEl.textContent = "Localisation en cours...";
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+      gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      resultEl.textContent = `Position capturée : ${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lng.toFixed(5)}`;
+    },
+    (err)=>{
+      resultEl.textContent = "Impossible d'obtenir la position (" + err.message + ")";
+    },
+    { enableHighAccuracy:true, timeout:10000 }
+  );
+});
+
+/* ---------- form submit ---------- */
+document.getElementById("releveForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const ancien = parseFloat(ancienEl.value);
+  const nouvel = parseFloat(nouvelEl.value);
+  if(nouvel < ancien){
+    showToast("⚠ Le nouvel index est inférieur à l'ancien");
+    return;
+  }
+  const rec = {
+    id: Date.now() + "-" + Math.random().toString(36).slice(2,8),
+    date: new Date().toISOString(),
+    numCompteur: document.getElementById("numCompteur").value.trim(),
+    nomClient: document.getElementById("nomClient").value.trim(),
+    quartier: document.getElementById("quartier").value.trim(),
+    ancienIndex: ancien,
+    nouvelIndex: nouvel,
+    consommation: nouvel - ancien,
+    remarques: document.getElementById("remarques").value.trim(),
+    gps: gpsCoords,
+    photo: photoDataUrl
+  };
+  await addRecord(rec);
+  showToast("Relevé enregistré ✓");
+
+  // reset form
+  e.target.reset();
+  consoValue.textContent = "—";
+  photoDataUrl = null;
+  photoPreview.style.display = "none";
+  photoPlaceholder.style.display = "block";
+  photoRemove.style.display = "none";
+  gpsCoords = null;
+  document.getElementById("gpsResult").textContent = "";
+});
+
+/* ---------- history rendering ---------- */
+let allRecords = [];
+async function renderHistory(){
+  allRecords = await getAllRecords();
+  applyFilter();
+}
+function applyFilter(){
+  const q = document.getElementById("searchInput").value.trim().toLowerCase();
+  const list = document.getElementById("recordsList");
+  const filtered = q
+    ? allRecords.filter(r =>
+        r.numCompteur.toLowerCase().includes(q) ||
+        (r.nomClient||"").toLowerCase().includes(q))
+    : allRecords;
+
+  if(filtered.length === 0){
+    list.innerHTML = `<div class="empty"><div class="dial-big"></div>Aucun relevé pour l'instant.<br>Les relevés enregistrés apparaîtront ici.</div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(r=>{
+    const d = new Date(r.date);
+    const dateStr = d.toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"}) + " " +
+                    d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+    return `
+      <div class="rec" data-id="${r.id}">
+        <div class="rec-top">
+          <span class="rec-id">${escapeHtml(r.numCompteur)}</span>
+          <span class="rec-date">${dateStr}</span>
+        </div>
+        <div class="rec-client">${escapeHtml(r.nomClient || "—")}${r.quartier ? " · " + escapeHtml(r.quartier) : ""}</div>
+        <div class="rec-bottom">
+          <span class="rec-conso">${r.ancienIndex} → ${r.nouvelIndex} (${r.consommation} u.)</span>
+          <span class="rec-actions"><button data-del="${r.id}">Supprimer</button></span>
+        </div>
+      </div>`;
+  }).join("");
+
+  list.querySelectorAll("[data-del]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      if(confirm("Supprimer ce relevé ?")){
+        await deleteRecord(btn.dataset.del);
+        showToast("Relevé supprimé");
+        renderHistory();
+      }
+    });
+  });
+}
+function escapeHtml(s){
+  return (s||"").replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+}
+document.getElementById("searchInput").addEventListener("input", applyFilter);
+
+/* ---------- export CSV ---------- */
+document.getElementById("exportBtn").addEventListener("click", ()=>{
+  if(allRecords.length === 0){ showToast("Aucun relevé à exporter"); return; }
+  const headers = ["Date","N° compteur","Client","Quartier","Ancien index","Nouvel index","Consommation","GPS","Remarques"];
+  const rows = allRecords.map(r=>[
+    new Date(r.date).toLocaleString("fr-FR"),
+    r.numCompteur, r.nomClient, r.quartier,
+    r.ancienIndex, r.nouvelIndex, r.consommation,
+    r.gps ? `${r.gps.lat},${r.gps.lng}` : "",
+    r.remarques
+  ]);
+  const csv = [headers, ...rows]
+    .map(row => row.map(cell => `"${String(cell??"").replace(/"/g,'""')}"`).join(","))
+    .join("\n");
+  downloadFile(csv, `releves_${dateForFile()}.csv`, "text/csv;charset=utf-8;");
+});
+
+document.getElementById("exportJsonBtn").addEventListener("click", ()=>{
+  if(allRecords.length === 0){ showToast("Aucun relevé à exporter"); return; }
+  downloadFile(JSON.stringify(allRecords, null, 2), `releves_backup_${dateForFile()}.json`, "application/json");
+});
+
+function dateForFile(){
+  return new Date().toISOString().slice(0,10);
+}
+function downloadFile(content, filename, mime){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("Export prêt ✓");
+}
+
+/* ---------- init ---------- */
+(async function init(){
+  updateStatus();
+  await openDB();
+  if("serviceWorker" in navigator){
+    try{ await navigator.serviceWorker.register("sw.js"); }catch(e){ console.warn("SW failed", e); }
+  }
+})();
+</script>
+</body>
+</html>
